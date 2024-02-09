@@ -49,10 +49,16 @@ func main() {
 
 			for _, channel := range channels {
 				if channel.Type == discordgo.ChannelTypeGuildVoice && strings.ToLower(channel.Name) == "afghanistan" {
+					if _, ok := connections[guild.Name]; ok {
+						if connections[guild.Name].Ready {
+							continue
+						}
+					}
 					connections[guild.Name], err = discord.ChannelVoiceJoin(guild.ID, channel.ID, false, false)
 					if err != nil {
 						fmt.Println(err)
 					}
+					continue
 				}
 			}
 		}
