@@ -9,6 +9,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var connections = make(map[string]*discordgo.VoiceConnection)
+
 func main() {
 	// read file called token
 	token, err := os.ReadFile("token")
@@ -37,37 +39,36 @@ func main() {
 		panic(err)
 	}
 
-	connections := make(map[string]*discordgo.VoiceConnection)
+	for {
+		for _, guild := range guilds {
+			channels, err := discord.GuildChannels(guild.ID)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
 
-	for _, guild := range guilds {
-		channels, err := discord.GuildChannels(guild.ID)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-
-		for _, channel := range channels {
-			if channel.Type == discordgo.ChannelTypeGuildVoice && strings.ToLower(channel.Name) == "afghanistan" {
-				connections[guild.Name], err = discord.ChannelVoiceJoin(guild.ID, channel.ID, false, false)
-				if err != nil {
-					fmt.Println(err)
+			for _, channel := range channels {
+				if channel.Type == discordgo.ChannelTypeGuildVoice && strings.ToLower(channel.Name) == "afghanistan" {
+					connections[guild.Name], err = discord.ChannelVoiceJoin(guild.ID, channel.ID, false, false)
+					if err != nil {
+						fmt.Println(err)
+					}
 				}
 			}
 		}
-	}
 
-	if len(connections) == 0 {
-		fmt.Println("No channels found")
-		return
-	}
+		if len(connections) == 0 {
+			fmt.Println("No channels found")
+			return
+		}
 
-	for {
 		occupying := "Occupying: "
 		for guildName, connection := range connections {
 			if connection.Ready {
 				occupying += guildName + ", "
 			}
 		}
+		fmt.Println(occupying)
 		time.Sleep(10 * time.Second)
 	}
 }
